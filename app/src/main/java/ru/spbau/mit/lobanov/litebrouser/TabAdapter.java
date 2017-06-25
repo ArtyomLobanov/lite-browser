@@ -1,12 +1,12 @@
 package ru.spbau.mit.lobanov.litebrouser;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import ru.spbau.mit.lobanov.litebrouser.TabManager.TabInfo;
@@ -18,7 +18,7 @@ import ru.spbau.mit.lobanov.litebrouser.TabManager.TabInfo;
 public class TabAdapter extends ArrayAdapter<TabInfo> {
 
     private final Context context;
-    private SelectionListener selectionListener;
+    private TabAdapterListener tabAdapterListener;
 
     public TabAdapter(@NonNull Context context) {
         super(context, R.layout.view_tab_info);
@@ -31,8 +31,8 @@ public class TabAdapter extends ArrayAdapter<TabInfo> {
         notifyDataSetChanged();
     }
 
-    public void setSelectionListener(SelectionListener listener) {
-        selectionListener = listener;
+    public void setTabAdapterListener(TabAdapterListener listener) {
+        tabAdapterListener = listener;
     }
 
     @NonNull
@@ -53,16 +53,19 @@ public class TabAdapter extends ArrayAdapter<TabInfo> {
         private final View view;
         private final TextView nameView;
         private final TextView addressView;
+        private final Button closeButton;
         private TabInfo item;
 
         private TabViewHolder() {
             view = View.inflate(context, R.layout.view_tab_info, null);
             view.setTag(this);
-            nameView = (TextView) view.findViewById(R.id.name);
-            addressView = (TextView) view.findViewById(R.id.address);
+            nameView = (TextView) view.findViewById(R.id.name_view);
+            addressView = (TextView) view.findViewById(R.id.address_view);
+            closeButton = (Button) view.findViewById(R.id.close_butoon);
             view.setOnClickListener(this);
             nameView.setOnClickListener(this);
             addressView.setOnClickListener(this);
+            closeButton.setOnClickListener(this);
         }
 
         private void setItem(TabInfo tabInfo) {
@@ -73,13 +76,19 @@ public class TabAdapter extends ArrayAdapter<TabInfo> {
 
         @Override
         public void onClick(View v) {
-            if (selectionListener != null) {
-                selectionListener.onTabSelected(item);
+            if (tabAdapterListener == null) {
+                return;
+            }
+            if (v == closeButton) {
+                tabAdapterListener.onTabClosed(item);
+            } else{
+                tabAdapterListener.onTabSelected(item);
             }
         }
     }
 
-    interface SelectionListener {
+    interface TabAdapterListener {
         void onTabSelected(TabInfo tabInfo);
+        void onTabClosed(TabInfo tabInfo);
     }
 }

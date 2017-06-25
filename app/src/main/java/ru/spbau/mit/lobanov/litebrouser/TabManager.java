@@ -1,11 +1,13 @@
 package ru.spbau.mit.lobanov.litebrouser;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -31,6 +33,7 @@ public class TabManager {
     private final ViewGroup panel;
     private final int cacheSize;
     private int activeTabIndex = -1;
+    private DataChangeListener dataChangeListener;
 
     public TabManager(ViewGroup panel, int cacheSize) {
         this.cacheSize = cacheSize;
@@ -50,6 +53,7 @@ public class TabManager {
         webView.loadUrl(url);
         activeTabs.add(webView);
         setActiveTab(activeTabs.size() - 1);
+        reportDataChanged();
     }
 
     public void closeTab(int index) {
@@ -71,12 +75,14 @@ public class TabManager {
             panel.removeView(webView);
             webView.destroy();
         }
+        reportDataChanged();
     }
 
     public void setActiveTab(int index) {
         updateVisibility(activeTabIndex, View.INVISIBLE);
         updateVisibility(index, View.VISIBLE);
         activeTabIndex = index;
+        reportDataChanged();
     }
 
     public Bundle saveState() {
@@ -111,6 +117,7 @@ public class TabManager {
         while (!cached.isEmpty() && cached.size() + activeTabs.size() > cacheSize) {
             cached.poll().destroy();
         }
+        reportDataChanged();
     }
 
     public TabInfo[] currentTabs() {
@@ -119,6 +126,16 @@ public class TabManager {
             tabs[i] = new TabInfo(activeTabs.get(i), i);
         }
         return tabs;
+    }
+
+    public void setDataChangeListener(DataChangeListener listener) {
+        dataChangeListener = listener;
+    }
+
+    private void reportDataChanged() {
+        if (dataChangeListener != null) {
+            dataChangeListener.dataChanged(currentTabs());
+        }
     }
 
     private void updateVisibility(int index, int visibility) {
@@ -143,10 +160,33 @@ public class TabManager {
             view.loadUrl(url.getUrl().toString());
             return true;
         }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            reportDataChanged();
+        }
+
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            super.onReceivedError(view, request, error);
+            reportDataChanged();
+        }
+
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+            reportDataChanged();
+        }
     }
 
     private class TabChromeClient extends WebChromeClient {
-        //todo support custom views
+
+        @Override
+        public void onReceivedTitle(WebView view, String title) {
+            super.onReceivedTitle(view, title);
+            reportDataChanged();
+        }
     }
 
     public static class TabInfo {
@@ -171,5 +211,9 @@ public class TabManager {
         public int getIndex() {
             return index;
         }
+    }
+
+    interface DataChangeListener {
+        void dataChanged(TabInfo[] actualData);
     }
 }
