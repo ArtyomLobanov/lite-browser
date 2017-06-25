@@ -15,20 +15,22 @@
 
     </ru.spbau.mit.lobanov.litebrouser.TabsPanelView>
 
+    <MultiAutoCompleteTextView
+        android:id="@+id/smart_line"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_weight="0"
+        android:background="@color/colorPrimaryDark"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
     <LinearLayout
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:background="@color/colorPrimaryDark"
         android:orientation="horizontal">
-
-        <MultiAutoCompleteTextView
-            android:id="@+id/smart_line"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textSize="16sp"
-            android:visibility="gone" />
 
         <TextView
             android:id="@+id/address_line"
@@ -40,14 +42,14 @@
             android:textSize="16sp" />
 
         <Button
-            android:id="@+id/back"
+            android:id="@+id/back_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_weight="0"
             android:background="@android:drawable/ic_menu_revert" />
 
         <Button
-            android:id="@+id/refresh"
+            android:id="@+id/refresh_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_weight="0"
@@ -60,8 +62,8 @@
             android:layout_weight="0"
             android:background="@android:drawable/ic_menu_add" />
 
-        <Button
-            android:id="@+id/tabs"
+        <ToggleButton
+            android:id="@+id/show_tabs_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_weight="0"

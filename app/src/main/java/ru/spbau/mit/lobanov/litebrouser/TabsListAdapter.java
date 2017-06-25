@@ -15,12 +15,12 @@ import ru.spbau.mit.lobanov.litebrouser.TabsPanelView.TabInfo;
  * Created by Артём on 25.06.2017.
  */
 
-public class TabAdapter extends ArrayAdapter<TabInfo> {
+public class TabsListAdapter extends ArrayAdapter<TabInfo> {
 
     private final Context context;
     private TabAdapterListener tabAdapterListener;
 
-    public TabAdapter(@NonNull Context context) {
+    public TabsListAdapter(@NonNull Context context) {
         super(context, R.layout.view_tab_info);
         this.context = context;
     }

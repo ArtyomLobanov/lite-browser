@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">LiteBrouser</string>
+    <string name="default_page">https://www.ya.ru/</string>
 </resources>
