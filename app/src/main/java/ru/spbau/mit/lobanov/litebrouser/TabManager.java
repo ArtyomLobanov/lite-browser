@@ -116,7 +116,7 @@ public class TabManager {
     public TabInfo[] currentTabs() {
         TabInfo[] tabs = new TabInfo[activeTabs.size()];
         for (int i = 0; i < tabs.length; i++) {
-            tabs[i] = new TabInfo(activeTabs.get(i));
+            tabs[i] = new TabInfo(activeTabs.get(i), i);
         }
         return tabs;
     }
@@ -152,10 +152,12 @@ public class TabManager {
     public static class TabInfo {
         private final String name;
         private final String address;
+        private final int index;
 
-        private TabInfo(WebView webView) {
+        private TabInfo(WebView webView, int index) {
             name = webView.getTitle();
             address = webView.getUrl();
+            this.index = index;
         }
 
         public String getName() {
@@ -164,6 +166,10 @@ public class TabManager {
 
         public String getAddress() {
             return address;
+        }
+
+        public int getIndex() {
+            return index;
         }
     }
 }

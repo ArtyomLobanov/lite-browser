@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1">
+
     </FrameLayout>
 
     <LinearLayout
@@ -45,6 +46,13 @@
             android:layout_height="40dp"
             android:layout_weight="0"
             android:background="@android:drawable/arrow_up_float" />
+
     </LinearLayout>
+
+    <ListView
+        android:id="@+id/tabs_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
 
 </android.widget.LinearLayout>
