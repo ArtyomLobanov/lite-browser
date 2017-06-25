@@ -3,8 +3,11 @@ package ru.spbau.mit.lobanov.litebrouser;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.MultiAutoCompleteTextView;
+import android.widget.TextView;
 
 import ru.spbau.mit.lobanov.litebrouser.TabsPanelView.TabInfo;
 
@@ -34,11 +37,14 @@ public class MainActivity extends Activity {
             tabManager.newTab("http://www.ya.a.ru");
 
         }
-        Button button1 = (Button) findViewById(R.id.back);
+        final TextView smartLine = (TextView) findViewById(R.id.address_line);
+        final Button button1 = (Button) findViewById(R.id.back);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                tabManager.setActiveTab(0);
+                if (tabManager.canGoBack()) {
+                    tabManager.goBack();
+                }
             }
         });
         Button button2 = (Button) findViewById(R.id.refresh);
@@ -46,8 +52,7 @@ public class MainActivity extends Activity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                tabManager.setActiveTab(2);
-                tabAdapter.updateData(tabManager.currentTabs());
+
             }
         });
         tabsList = (ListView) findViewById(R.id.tabs_list);
@@ -75,10 +80,11 @@ public class MainActivity extends Activity {
                 tabManager.closeTab(tabInfo.getIndex());
             }
         });
-        tabManager.setDataChangeListener(new TabsPanelView.DataChangeListener() {
+        tabManager.setTabsPanelListener(new TabsPanelView.TabsPanelListener() {
             @Override
-            public void dataChanged(TabInfo[] actualData) {
+            public void tabsSetChanged(TabInfo[] actualData) {
                 tabAdapter.updateData(actualData);
+                smartLine.setText(tabManager.getUrl());
             }
         });
         Button newTab = (Button) findViewById(R.id.new_tab_button);
@@ -90,7 +96,16 @@ public class MainActivity extends Activity {
         });
     }
 
-//    @Override
+    @Override
+    public void onBackPressed() {
+        if (tabManager.canGoBack()) {
+            tabManager.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    //    @Override
 //    protected void onSaveInstanceState(Bundle outState) {
 //        super.onSaveInstanceState(outState);
 //        Bundle bundle = tabManager.saveState();

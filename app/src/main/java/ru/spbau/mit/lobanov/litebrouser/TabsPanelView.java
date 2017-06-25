@@ -9,7 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -37,8 +36,9 @@ public class TabsPanelView extends FrameLayout {
     private final List<WebView> activeTabs = new ArrayList<>();
     private final TabWebClient tabWebClient = new TabWebClient();
     private final TabChromeClient tabChromeClient = new TabChromeClient();
+    private final OnClickListener tabClickListener = new OnTabClickListener();
     private int activeTabIndex = -1;
-    private DataChangeListener dataChangeListener;
+    private TabsPanelListener tabsPanelListener;
 
     public TabsPanelView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -59,7 +59,7 @@ public class TabsPanelView extends FrameLayout {
         webView.loadUrl(url);
         activeTabs.add(webView);
         setActiveTab(activeTabs.size() - 1);
-        reportDataChanged();
+        reportTabsSetChanged();
     }
 
     public void closeTab(int index) {
@@ -81,14 +81,14 @@ public class TabsPanelView extends FrameLayout {
             removeView(webView);
             webView.destroy();
         }
-        reportDataChanged();
+        reportTabsSetChanged();
     }
 
     public void setActiveTab(int index) {
         updateVisibility(activeTabIndex, View.INVISIBLE);
         updateVisibility(index, View.VISIBLE);
         activeTabIndex = index;
-        reportDataChanged();
+        reportTabsSetChanged();
     }
 
     @Override
@@ -114,7 +114,7 @@ public class TabsPanelView extends FrameLayout {
         while (!cached.isEmpty() && cached.size() + activeTabs.size() > CACHE_SIZE) {
             cached.poll().destroy();
         }
-        reportDataChanged();
+        reportTabsSetChanged();
     }
 
     @Override
@@ -139,13 +139,34 @@ public class TabsPanelView extends FrameLayout {
         return tabs;
     }
 
-    public void setDataChangeListener(DataChangeListener listener) {
-        dataChangeListener = listener;
+    public void setTabsPanelListener(TabsPanelListener listener) {
+        tabsPanelListener = listener;
     }
 
-    private void reportDataChanged() {
-        if (dataChangeListener != null) {
-            dataChangeListener.dataChanged(currentTabs());
+    public void openUrl(String url) {
+        if (activeTabs.isEmpty()) {
+            newTab(url);
+        } else {
+            activeTabs.get(activeTabIndex).loadUrl(url);
+        }
+    }
+
+    public boolean canGoBack() {
+        return !activeTabs.isEmpty() && activeTabs.get(0).canGoBack();
+    }
+
+    public void goBack() {
+        activeTabs.get(0).goBack();
+        reportTabsSetChanged();
+    }
+
+    public String getUrl() {
+        return activeTabIndex == -1? "" : activeTabs.get(activeTabIndex).getUrl();
+    }
+
+    private void reportTabsSetChanged() {
+        if (tabsPanelListener != null) {
+            tabsPanelListener.tabsSetChanged(currentTabs());
         }
     }
 
@@ -161,6 +182,7 @@ public class TabsPanelView extends FrameLayout {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebViewClient(tabWebClient);
         webView.setWebChromeClient(tabChromeClient);
+        webView.setOnClickListener(tabClickListener);
         addView(webView);
         return webView;
     }
@@ -169,26 +191,26 @@ public class TabsPanelView extends FrameLayout {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest url) {
             view.loadUrl(url.getUrl().toString());
-            reportDataChanged();
+            reportTabsSetChanged();
             return true;
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
-            reportDataChanged();
+            reportTabsSetChanged();
         }
 
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             super.onReceivedError(view, request, error);
-            reportDataChanged();
+            reportTabsSetChanged();
         }
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-            reportDataChanged();
+            reportTabsSetChanged();
         }
     }
 
@@ -197,11 +219,18 @@ public class TabsPanelView extends FrameLayout {
         @Override
         public void onReceivedTitle(WebView view, String title) {
             super.onReceivedTitle(view, title);
-            reportDataChanged();
+            reportTabsSetChanged();
         }
     }
 
-    public static class TabInfo {
+    private class OnTabClickListener implements OnClickListener {
+        @Override
+        public void onClick(View v) {
+            callOnClick();
+        }
+    }
+
+    public class TabInfo {
         private final String name;
         private final String address;
         private final int index;
@@ -225,7 +254,7 @@ public class TabsPanelView extends FrameLayout {
         }
     }
 
-    interface DataChangeListener {
-        void dataChanged(TabInfo[] actualData);
+    interface TabsPanelListener {
+        void tabsSetChanged(TabInfo[] actualData);
     }
 }
