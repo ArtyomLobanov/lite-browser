@@ -9,7 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-import ru.spbau.mit.lobanov.litebrouser.TabManager.TabInfo;
+import ru.spbau.mit.lobanov.litebrouser.TabsPanelView.TabInfo;
 
 /**
  * Created by Артём on 25.06.2017.

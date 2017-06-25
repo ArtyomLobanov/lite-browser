@@ -7,13 +7,13 @@
     android:orientation="vertical"
     tools:context="ru.spbau.mit.lobanov.litebrouser.MainActivity">
 
-    <FrameLayout
+    <ru.spbau.mit.lobanov.litebrouser.TabsPanelView
         android:id="@+id/web_views_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1">
 
-    </FrameLayout>
+    </ru.spbau.mit.lobanov.litebrouser.TabsPanelView>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,10 +21,12 @@
         android:layout_weight="0"
         android:orientation="horizontal">
 
-        <SearchView
+        <MultiAutoCompleteTextView
+            android:id="@+id/smart_line"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/back"

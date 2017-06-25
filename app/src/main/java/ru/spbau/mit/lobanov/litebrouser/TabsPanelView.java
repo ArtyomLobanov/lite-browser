@@ -1,9 +1,13 @@
 package ru.spbau.mit.lobanov.litebrouser;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
@@ -11,6 +15,7 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -21,29 +26,27 @@ import java.util.Queue;
  * Created by Артём on 24.06.2017.
  */
 
-public class TabManager {
+public class TabsPanelView extends FrameLayout {
 
     private static final String TABS_STATES_ARRAY_KEY = "tabs_states_array_key";
     private static final String ACTIVE_TAB_INDEX_KEY = "active_tab_index_key";
-    private final Bundle INITIAL_STATE;
+    private static final String SUPER_STATE_KEY = "super_state_key";
+    private static final int CACHE_SIZE = 5;
 
-    private final Queue<WebView> cached = new ArrayDeque<>();
+    private final Queue<WebView> cached = new ArrayDeque<>(CACHE_SIZE);
     private final List<WebView> activeTabs = new ArrayList<>();
     private final TabWebClient tabWebClient = new TabWebClient();
     private final TabChromeClient tabChromeClient = new TabChromeClient();
-    private final ViewGroup panel;
-    private final int cacheSize;
     private int activeTabIndex = -1;
     private DataChangeListener dataChangeListener;
 
-    public TabManager(ViewGroup panel, int cacheSize) {
-        this.cacheSize = cacheSize;
-        this.panel = panel;
-        for (int i = 0; i < cacheSize; i++) {
-            cached.add(createWebView());
+    public TabsPanelView(@NonNull Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        if (!isInEditMode()) {
+            for (int i = 0; i < CACHE_SIZE; i++) {
+                cached.add(createWebView());
+            }
         }
-        INITIAL_STATE = new Bundle();
-        cached.peek().saveState(INITIAL_STATE);
     }
 
     public void newTab(String url) {
@@ -71,11 +74,11 @@ public class TabManager {
                 setActiveTab(index == 0? 0 : index - 1);
             }
         }
-        if (activeTabs.size() + cached.size() < cacheSize) {
+        if (activeTabs.size() + cached.size() < CACHE_SIZE) {
             webView.clearHistory();
             cached.add(webView);
         } else {
-            panel.removeView(webView);
+            removeView(webView);
             webView.destroy();
         }
         reportDataChanged();
@@ -88,39 +91,44 @@ public class TabManager {
         reportDataChanged();
     }
 
-    public Bundle saveState() {
-        Bundle bundle = new Bundle();
-        Bundle[] states = new Bundle[activeTabs.size()];
-        for (int i = 0; i < states.length; i++) {
-            states[i] = new Bundle();
-            activeTabs.get(i).saveState(states[i]);
-        }
-        bundle.putParcelableArray(TABS_STATES_ARRAY_KEY, states);
-        bundle.putInt(ACTIVE_TAB_INDEX_KEY, activeTabIndex);
-        return bundle;
-    }
-
-    public void restoreState(Bundle bundle) {
+    @Override
+    protected void onRestoreInstanceState(Parcelable parcelable) {
+        Bundle state = (Bundle) parcelable;
+        super.onRestoreInstanceState(state.getParcelable(SUPER_STATE_KEY));
         setActiveTab(-1);
         for (WebView webView : activeTabs) {
             webView.clearHistory();
             cached.add(webView);
         }
         activeTabs.clear();
-        Parcelable[] states = bundle.getParcelableArray(TABS_STATES_ARRAY_KEY);
+        Parcelable[] states = state.getParcelableArray(TABS_STATES_ARRAY_KEY);
         while (states.length > cached.size()) {//todo check not null
             cached.add(createWebView());
         }
-        for (Parcelable state : states) {
+        for (Parcelable tabState : states) {
             WebView webView = cached.poll();
-            webView.restoreState((Bundle) state);
+            webView.restoreState((Bundle) tabState);
             activeTabs.add(webView);
         }
-        setActiveTab(bundle.getInt(ACTIVE_TAB_INDEX_KEY, -1));
-        while (!cached.isEmpty() && cached.size() + activeTabs.size() > cacheSize) {
+        setActiveTab(state.getInt(ACTIVE_TAB_INDEX_KEY, -1));
+        while (!cached.isEmpty() && cached.size() + activeTabs.size() > CACHE_SIZE) {
             cached.poll().destroy();
         }
         reportDataChanged();
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Bundle state = new Bundle();
+        state.putParcelable(SUPER_STATE_KEY, super.onSaveInstanceState());
+        Bundle[] tabsStates = new Bundle[activeTabs.size()];
+        for (int i = 0; i < tabsStates.length; i++) {
+            tabsStates[i] = new Bundle();
+            activeTabs.get(i).saveState(tabsStates[i]);
+        }
+        state.putParcelableArray(TABS_STATES_ARRAY_KEY, tabsStates);
+        state.putInt(ACTIVE_TAB_INDEX_KEY, activeTabIndex);
+        return state;
     }
 
     public TabInfo[] currentTabs() {
@@ -149,11 +157,11 @@ public class TabManager {
 
     @SuppressLint("SetJavaScriptEnabled")
     private WebView createWebView() {
-        WebView webView = (WebView) View.inflate(panel.getContext(), R.layout.view_tab, null);
+        WebView webView = (WebView) View.inflate(getContext(), R.layout.view_tab, null);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebViewClient(tabWebClient);
         webView.setWebChromeClient(tabChromeClient);
-        panel.addView(webView);
+        addView(webView);
         return webView;
     }
 

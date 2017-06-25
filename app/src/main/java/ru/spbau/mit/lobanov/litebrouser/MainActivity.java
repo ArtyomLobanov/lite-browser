@@ -1,35 +1,29 @@
 package ru.spbau.mit.lobanov.litebrouser;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ListView;
+
+import ru.spbau.mit.lobanov.litebrouser.TabsPanelView.TabInfo;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class MainActivity extends Activity {
 
-    private TabManager tabManager;
+    private TabsPanelView tabManager;
     private ListView tabsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.web_views_panel);
-
-        tabManager = new TabManager(frameLayout, 5);
-        if (savedInstanceState != null) {
-            tabManager.restoreState(savedInstanceState.getBundle("tabs"));
-        } else {
+        tabManager = (TabsPanelView) findViewById(R.id.web_views_panel);
+        if (savedInstanceState == null) {
+//            tabManager.restoreState(savedInstanceState.getBundle("tabs"));
+//        } else {
             tabManager.newTab("http://www.google.com");
             tabManager.newTab("http://www.ya.a.ru");
             tabManager.newTab("http://www.ya.a.ru");
@@ -72,18 +66,18 @@ public class MainActivity extends Activity {
         tabAdapter.updateData(tabManager.currentTabs());
         tabAdapter.setTabAdapterListener(new TabAdapter.TabAdapterListener() {
             @Override
-            public void onTabSelected(TabManager.TabInfo tabInfo) {
+            public void onTabSelected(TabInfo tabInfo) {
                 tabManager.setActiveTab(tabInfo.getIndex());
             }
 
             @Override
-            public void onTabClosed(TabManager.TabInfo tabInfo) {
+            public void onTabClosed(TabInfo tabInfo) {
                 tabManager.closeTab(tabInfo.getIndex());
             }
         });
-        tabManager.setDataChangeListener(new TabManager.DataChangeListener() {
+        tabManager.setDataChangeListener(new TabsPanelView.DataChangeListener() {
             @Override
-            public void dataChanged(TabManager.TabInfo[] actualData) {
+            public void dataChanged(TabInfo[] actualData) {
                 tabAdapter.updateData(actualData);
             }
         });
@@ -96,35 +90,10 @@ public class MainActivity extends Activity {
         });
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Bundle bundle = tabManager.saveState();
-        outState.putBundle("tabs", bundle);
-    }
-
-    public class myWebClient extends WebViewClient
-    {
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            // TODO Auto-generated method stub
-            super.onPageStarted(view, url, favicon);
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest url) {
-            view.loadUrl(url.getUrl().toString());
-            return true;
-
-        }
-
-        @Override
-        public void onPageFinished(WebView view, String url) {
-        }
-
-        @Override
-        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-            throw new RuntimeException("error");
-        }
-    }
+//    @Override
+//    protected void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        Bundle bundle = tabManager.saveState();
+//        outState.putBundle("tabs", bundle);
+//    }
 }
