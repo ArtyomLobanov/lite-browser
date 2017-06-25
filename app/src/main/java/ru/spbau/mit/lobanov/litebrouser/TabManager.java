@@ -25,6 +25,7 @@ public class TabManager {
 
     private static final String TABS_STATES_ARRAY_KEY = "tabs_states_array_key";
     private static final String ACTIVE_TAB_INDEX_KEY = "active_tab_index_key";
+    private final Bundle INITIAL_STATE;
 
     private final Queue<WebView> cached = new ArrayDeque<>();
     private final List<WebView> activeTabs = new ArrayList<>();
@@ -41,6 +42,8 @@ public class TabManager {
         for (int i = 0; i < cacheSize; i++) {
             cached.add(createWebView());
         }
+        INITIAL_STATE = new Bundle();
+        cached.peek().saveState(INITIAL_STATE);
     }
 
     public void newTab(String url) {
@@ -158,6 +161,7 @@ public class TabManager {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest url) {
             view.loadUrl(url.getUrl().toString());
+            reportDataChanged();
             return true;
         }
 
